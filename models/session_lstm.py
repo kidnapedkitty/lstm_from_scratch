@@ -36,8 +36,11 @@ class SessionLSTM(nn.Module):
         outputs = []
         for t in range(seq_len):
             x_t = x[:, t, :]
+            valid_mask = (lengths > t).unsqueeze(1)  # only update non-padded positions
             for l, layer in enumerate(self.layers):
-                h[l], c[l] = layer(x_t, h[l], c[l])
+                h_new, c_new = layer(x_t, h[l], c[l])
+                h[l] = torch.where(valid_mask, h_new, h[l])
+                c[l] = torch.where(valid_mask, c_new, c[l])
                 x_t = self.dropout(h[l])
             outputs.append(h[-1].unsqueeze(1))
 

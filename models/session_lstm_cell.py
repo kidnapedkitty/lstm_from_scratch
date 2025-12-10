@@ -18,6 +18,11 @@ class SessionLSTMCell(nn.Module):
         stdv = 1.0 / (self.hidden_size ** 0.5)
         for weight in self.parameters():
             nn.init.uniform_(weight, -stdv, stdv)
+        
+        # Initialize forget gate bias to 1.0 for better gradient flow
+        # Bias is structured as [i, f, g, o], so forget gate is second quarter
+        hidden_size = self.hidden_size
+        nn.init.constant_(self.b[hidden_size:2*hidden_size], 1.0)
 
     def forward(self, x_t, h_prev, c_prev):
         gates = x_t @ self.W_x + h_prev @ self.W_h + self.b
